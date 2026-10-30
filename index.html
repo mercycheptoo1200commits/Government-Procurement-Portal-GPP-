@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1f35">
+  <title>Global Procurement Portal | GPP</title>
+  <style>
+    :root {
+      --navy: #0b1f35;
+      --navy2: #132d49;
+      --blue: #1769aa;
+      --gold: #d7a943;
+      --bg: #f3f6fa;
+      --white: #fff;
+      --text: #263548;
+      --muted: #718096;
+      --border: #e2e8f0;
+      --green: #16845b;
+      --red: #c74747;
+      --shadow: 0 5px 20px rgba(15,35,60,.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 250px; background: var(--navy); color: white;
+      position: fixed; inset: 0 auto 0 0; overflow-y: auto;
+      display: flex; flex-direction: column; z-index: 10;
+    }
+    .brand { padding: 25px 20px; border-bottom: 1px solid #29415b; }
+    .brand-mark {
+      width: 42px; height: 42px; border: 2px solid var(--gold);
+      display: grid; place-items: center; border-radius: 9px;
+      color: var(--gold); font-weight: bold; font-size: 19px; margin-bottom: 12px;
+    }
+    .brand h2 { font-size: 16px; line-height: 1.4; }
+    .brand small { color: #aebed0; font-size: 11px; letter-spacing: 1px; }
+    .nav-label { padding: 22px 20px 9px; color: #8195aa; font-size: 10px; font-weight: bold; letter-spacing: 1.5px; }
+    .nav-link {
+      border: 0; background: transparent; color: #c5d1dd; text-align: left;
+      padding: 12px 20px; display: flex; gap: 12px; align-items: center;
+      width: 100%; font-size: 13px; transition: .2s;
+    }
+    .nav-link:hover, .nav-link.active { background: #1b3a59; color: white; border-left: 3px solid var(--gold); }
+    .nav-icon { width: 19px; text-align: center; }
+    .sidebar-bottom { margin-top: auto; padding: 18px; border-top: 1px solid #29415b; }
+    .sidebar-bottom small { color: #9eb0c2; }
+
+    .main { margin-left: 250px; width: calc(100% - 250px); }
+    .topbar {
+      background: white; height: 70px; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 30px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 5;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 15px; }
+    .topbar h3 { font-size: 16px; }
+    .topbar small { color: var(--muted); }
+    .top-actions { display: flex; align-items: center; gap: 18px; }
+    .icon-btn { border: 0; background: transparent; font-size: 19px; position: relative; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: #e8eff7;
+      display: grid; place-items: center; color: var(--navy); font-weight: bold;
+    }
+    .menu-toggle { display: none; }
+
+    .content { padding: 28px 30px; max-width: 1600px; margin: auto; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; }
+    .page-header h1 { font-size: 25px; color: var(--navy); margin-bottom: 6px; }
+    .page-header p { color: var(--muted); font-size: 13px; }
+    .btn {
+      border: 0; border-radius: 6px; padding: 11px 16px; font-size: 12px;
+      font-weight: bold; background: var(--blue); color: white;
+    }
+    .btn:hover { opacity: .9; }
+    .btn.gold { background: var(--gold); color: var(--navy); }
+    .btn.light { background: #eaf1f8; color: var(--navy); }
+    .btn.danger { background: var(--red); }
+    .btn.small { padding: 7px 10px; font-size: 11px; }
+    .btn + .btn { margin-left: 6px; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 17px; margin-bottom: 23px; }
+    .stat-card {
+      background: white; padding: 20px; border-radius: 9px; box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .stat-icon { width: 39px; height: 39px; border-radius: 8px; background: #edf4fb; display: grid; place-items: center; font-size: 19px; }
+    .stat-card h2 { font-size: 27px; color: var(--navy); margin-bottom: 5px; }
+    .stat-card p { font-size: 12px; color: var(--muted); }
+    .stat-note { color: var(--green); font-size: 11px; }
+
+    .panel { background: white; border: 1px solid var(--border); border-radius: 9px; box-shadow: var(--shadow); margin-bottom: 22px; overflow: hidden; }
+    .panel-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .panel-header h3 { font-size: 15px; color: var(--navy); }
+    .panel-body { padding: 20px; }
+    .grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    th { background: #f8fafc; color: #68798d; font-size: 10px; text-transform: uppercase; letter-spacing: .6px; text-align: left; padding: 13px 15px; }
+    td { padding: 14px 15px; border-top: 1px solid #edf0f4; font-size: 12px; }
+    td strong { color: var(--navy); }
+    .muted { color: var(--muted); }
+    .status { padding: 5px 9px; border-radius: 20px; font-size: 10px; font-weight: bold; display: inline-block; }
+    .status.open { background: #e2f5ec; color: #16764f; }
+    .status.pending { background: #fff4d8; color: #9b6a0b; }
+    .status.closed { background: #edf0f4; color: #667085; }
+    .status.review { background: #e7efff; color: #315ca8; }
+    .status.rejected { background: #fde8e8; color: #b13c3c; }
+
+    .activity { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid #edf0f4; }
+    .activity:last-child { border: 0; }
+    .activity-icon { width: 34px; height: 34px; border-radius: 50%; background: #edf4fb; display: grid; place-items: center; flex-shrink: 0; }
+    .activity strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .activity small { color: var(--muted); font-size: 11px; }
+
+    .search-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .search-row input, .search-row select { flex: 1; min-width: 150px; }
+    input, select, textarea {
+      border: 1px solid #d8e0e9; border-radius: 6px; padding: 11px 12px;
+      background: white; color: var(--text); width: 100%; font-size: 12px;
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .field { margin-bottom: 15px; }
+    .field label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 7px; color: #536477; }
+    .field.full { grid-column: 1 / -1; }
+    .empty { text-align: center; padding: 35px; color: var(--muted); font-size: 13px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .notice { padding: 14px 16px; background: #edf5fc; border-left: 3px solid var(--blue); font-size: 12px; line-height: 1.6; margin-bottom: 18px; border-radius: 4px; }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: #07172999; z-index: 30; align-items: center; justify-content: center; padding: 15px; }
+    .modal-backdrop.show { display: flex; }
+    .modal { background: white; border-radius: 10px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+    .modal-header h3 { font-size: 16px; }
+    .modal-body { padding: 22px; }
+    .modal-footer { padding: 15px 22px; border-top: 1px solid var(--border); text-align: right; }
+    .close { border: 0; background: transparent; font-size: 22px; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: var(--navy); color: white; padding: 13px 18px; border-radius: 7px; display: none; z-index: 50; font-size: 12px; }
+    .toast.show { display: block; }
+    .progress { height: 7px; background: #edf0f4; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .progress span { display: block; height: 100%; background: var(--blue); }
+    .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+    .quick-card { border: 1px solid var(--border); padding: 17px; border-radius: 8px; cursor: pointer; }
+    .quick-card:hover { border-color: var(--blue); background: #f8fbff; }
+    .quick-card strong { display: block; margin: 9px 0 5px; font-size: 12px; }
+    .quick-card small { color: var(--muted); font-size: 11px; }
+
+    @media(max-width:1000px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media(max-width:700px) {
+      .sidebar { transform: translateX(-100%); transition: .25s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; width: 100%; }
+      .menu-toggle { display: block; }
+      .topbar { padding: 0 15px; }
+      .content { padding: 20px 14px; }
+      .page-header { align-items: flex-start; flex-direction: column; }
+      .stats { gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-card h2 { font-size: 22px; }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">GPP</div>
+      <h2>Global Procurement Portal</h2>
+      <small>GLOBAL PROCUREMENT NETWORK</small>
+    </div>
+
+    <div class="nav-label">MAIN MENU</div>
+    <button class="nav-link active" data-page="dashboard"><span class="nav-icon">▦</span> Dashboard</button>
+    <button class="nav-link" data-page="tenders"><span class="nav-icon">▤</span> Tender Marketplace</button>
+    <button class="nav-link" data-page="suppliers"><span class="nav-icon">◉</span> Suppliers</button>
+    <button class="nav-link" data-page="bids"><span class="nav-icon">▣</span> Bid Management</button>
+
+    <div class="nav-label">PROCUREMENT</div>
+    <button class="nav-link" data-page="create"><span class="nav-icon">＋</span> Create Tender</button>
+    <button class="nav-link" data-page="evaluation"><span class="nav-icon">✓</span> Evaluations</button>
+    <button class="nav-link" data-page="contracts"><span class="nav-icon">▧</span> Contracts</button>
+    <button class="nav-link" data-page="orders"><span class="nav-icon">▥</span> Purchase Orders</button>
+    <button class="nav-link" data-page="invoices"><span class="nav-icon">＄</span> Invoices</button>
+
+    <div class="nav-label">ADMINISTRATION</div>
+    <button class="nav-link" data-page="organizations"><span class="nav-icon">▦</span> Organizations</button>
+    <button class="nav-link" data-page="users"><span class="nav-icon">♙</span> User Directory</button>
+    <button class="nav-link" data-page="reports"><span class="nav-icon">▥</span> Reports & Analytics</button>
+    <button class="nav-link" data-page="notifications"><span class="nav-icon">♧</span> Notifications</button>
+    <button class="nav-link" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
+
+    <div class="sidebar-bottom">
+      <small>GLOBAL PROCUREMENT PORTAL</small><br>
+      <small>Version 1.0</small>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn menu-toggle" id="menuToggle">☰</button>
+        <div>
+          <h3 id="topTitle">Dashboard</h3>
+          <small>Global Procurement Portal</small>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" onclick="navigate('notifications')" title="Notifications">♧</button>
+        <div class="avatar">AD</div>
+        <div><strong style="font-size:12px">Administrator</strong><br><small class="muted">Platform Admin</small></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <section class="page active" id="dashboard">
+        <div class="page-header">
+          <div><h1>Procurement Dashboard</h1><p>Overview of global procurement activities and performance.</p></div>
+          <button class="btn gold" onclick="navigate('create')">＋ Create New Tender</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card"><div class="stat-top"><span class="muted">Active Tenders</span><div class="stat-icon">▤</div></div><h2 id="statTenders">0</h2><p><span class="stat-note">●</span> Published opportunities</p></div>
+          <div class="stat-card"><div class="stat-top"><span class="muted">Registered Suppliers</span><div class="stat-icon">◉</div></div><h2 id="statSuppliers">0</h2><p>Supplier network</p></div>
+          <div class="stat-card"><div class="stat-top"><span class="muted">Submitted Bids</span><div class="stat-icon">▣</div></div><h2 id="statBids">0</h2><p>Received submissions</p></div>
+          <div class="stat-card"><div class="stat-top"><span class="muted">Contracts</span><div class="stat-icon">▧</div></div><h2 id="statContracts">0</h2><p>Recorded agreements</p></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><h3>Recent Tender Opportunities</h3><button class="btn light small" onclick="navigate('tenders')">View All</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Tender Reference</th><th>Title</th><th>Organization</th><th>Status</th></tr></thead><tbody id="dashboardTenders"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>Recent Activities</h3></div>
+            <div class="panel-body" id="activityFeed">
+              <div class="empty">No activities recorded yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Quick Actions</h3></div>
+          <div class="panel-body quick-grid">
+            <div class="quick-card" onclick="navigate('create')"><span>＋</span><strong>Create Tender</strong><small>Publish a procurement opportunity</small></div>
+            <div class="quick-card" onclick="navigate('suppliers')"><span>◉</span><strong>Manage Suppliers</strong><small>View supplier registrations</small></div>
+            <div class="quick-card" onclick="navigate('bids')"><span>▣</span><strong>Review Bids</strong><small>Track submitted proposals</small></div>
+            <div class="quick-card" onclick="navigate('contracts')"><span>▧</span><strong>Manage Contracts</strong><small>Track awarded agreements</small></div>
+            <div class="quick-card" onclick="navigate('reports')"><span>▥</span><strong>View Reports</strong><small>Procurement performance</small></div>
+            <div class="quick-card" onclick="navigate('organizations')"><span>▦</span><strong>Organizations</strong><small>Government entities</small></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TENDERS -->
+      <section class="page" id="tenders">
+        <div class="page-header"><div><h1>Tender Marketplace</h1><p>Explore procurement opportunities across participating organizations.</p></div><button class="btn" onclick="navigate('create')">＋ Publish Tender</button></div>
+        <div class="panel">
+          <div class="panel-body">
+            <div class="search-row">
+              <input id="tenderSearch" placeholder="Search by title, reference or organization..." oninput="renderTenders()">
+              <select id="tenderStatus" onchange="renderTenders()"><option value="">All statuses</option><option>Open</option><option>Under Review</option><option>Closed</option></select>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Reference</th><th>Tender Title</th><th>Organization</th><th>Country</th><th>Budget</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead><tbody id="tenderTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- SUPPLIERS -->
+      <section class="page" id="suppliers">
+        <div class="page-header"><div><h1>Supplier Directory</h1><p>Manage registered suppliers and business organizations.</p></div><button class="btn" onclick="openModal('supplierModal')">＋ Add Supplier</button></div>
+        <div class="panel">
+          <div class="panel-body"><div class="search-row"><input id="supplierSearch" placeholder="Search supplier or country..." oninput="renderSuppliers()"><select id="supplierStatus" onchange="renderSuppliers()"><option value="">All statuses</option><option>Verified</option><option>Pending</option><option>Rejected</option></select></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Company</th><th>Registration Number</th><th>Country</th><th>Email</th><th>Category</th><th>Status</th><th>Action</th></tr></thead><tbody id="supplierTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- BIDS -->
+      <section class="page" id="bids">
+        <div class="page-header"><div><h1>Bid Management</h1><p>Monitor supplier submissions and procurement responses.</p></div></div>
+        <div class="panel">
+          <div class="panel-body"><div class="search-row"><input id="bidSearch" placeholder="Search tender or supplier..." oninput="renderBids()"><select id="bidStatus" onchange="renderBids()"><option value="">All statuses</option><option>Submitted</option><option>Under Review</option><option>Accepted</option><option>Rejected</option></select></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Bid Reference</th><th>Tender</th><th>Supplier</th><th>Amount</th><th>Submission Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="bidTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- CREATE TENDER -->
+      <section class="page" id="create">
+        <div class="page-header"><div><h1>Create Procurement Tender</h1><p>Publish a new procurement opportunity for qualified suppliers.</p></div></div>
+        <div class="notice">Complete the tender information below. Ensure the procurement requirements, deadlines and eligibility conditions are accurate before publication.</div>
+        <div class="panel">
+          <div class="panel-header"><h3>Tender Information</h3></div>
+          <div class="panel-body">
+            <form id="tenderForm">
+              <div class="form-grid">
+                <div class="field"><label>Tender Title *</label><input name="title" required placeholder="Enter tender title"></div>
+                <div class="field"><label>Procuring Organization *</label><input name="organization" required placeholder="Government ministry or agency"></div>
+                <div class="field"><label>Country *</label><input name="country" required placeholder="Country"></div>
+                <div class="field"><label>Procurement Category *</label><select name="category" required><option value="">Select category</option><option>Construction</option><option>Information Technology</option><option>Healthcare</option><option>Transport</option><option>Consultancy</option><option>Education</option><option>Office Supplies</option><option>Other</option></select></div>
+                <div class="field"><label>Estimated Budget *</label><input name="budget" required placeholder="e.g. USD 250,000"></div>
+                <div class="field"><label>Submission Deadline *</label><input name="deadline" type="date" required></div>
+                <div class="field"><label>Contact Email</label><input name="email" type="email" placeholder="procurement@example.gov"></div>
+                <div class="field"><label>Tender Status</label><select name="status"><option>Open</option><option>Under Review</option><option>Closed</option></select></div>
+                <div class="field full"><label>Description and Scope of Work *</label><textarea name="description" required placeholder="Describe the procurement requirements, scope and deliverables..."></textarea></div>
+                <div class="field full"><label>Eligibility and Qualification Requirements</label><textarea name="requirements" placeholder="List supplier eligibility and qualification criteria..."></textarea></div>
+              </div>
+              <button class="btn gold" type="submit">Publish Tender</button>
+              <button class="btn light" type="reset">Clear Form</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- EVALUATIONS -->
+      <section class="page" id="evaluation">
+        <div class="page-header"><div><h1>Bid Evaluations</h1><p>Review and record procurement evaluation decisions.</p></div></div>
+        <div class="panel"><div class="panel-header"><h3>Evaluation Workspace</h3></div><div class="table-wrap"><table><thead><tr><th>Bid Reference</th><th>Tender</th><th>Supplier</th><th>Amount</th><th>Status</th><th>Decision</th></tr></thead><tbody id="evaluationTable"></tbody></table></div></div>
+      </section>
+
+      <!-- CONTRACTS -->
+      <section class="page" id="contracts">
+        <div class="page-header"><div><h1>Contract Management</h1><p>Track awarded contracts and supplier agreements.</p></div><button class="btn" onclick="openModal('contractModal')">＋ Add Contract</button></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Contract Reference</th><th>Title</th><th>Supplier</th><th>Value</th><th>Start Date</th><th>End Date</th><th>Status</th></tr></thead><tbody id="contractTable"></tbody></table></div></div>
+      </section>
+
+      <!-- PURCHASE ORDERS -->
+      <section class="page" id="orders">
+        <div class="page-header"><div><h1>Purchase Orders</h1><p>Manage purchase orders and delivery progress.</p></div><button class="btn" onclick="openModal('orderModal')">＋ New Purchase Order</button></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Order Reference</th><th>Supplier</th><th>Description</th><th>Amount</th><th>Order Date</th><th>Status</th></tr></thead><tbody id="orderTable"></tbody></table></div></div>
+      </section>
+
+      <!-- INVOICES -->
+      <section class="page" id="invoices">
+        <div class="page-header"><div><h1>Invoice Management</h1><p>Track supplier invoices and payment progress.</p></div><button class="btn" onclick="openModal('invoiceModal')">＋ Record Invoice</button></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Invoice Reference</th><th>Supplier</th><th>Contract</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead><tbody id="invoiceTable"></tbody></table></div></div>
+      </section>
+
+      <!-- ORGANIZATIONS -->
+      <section class="page" id="organizations">
+        <div class="page-header"><div><h1>Government Organizations</h1><p>Manage participating governments, ministries and agencies.</p></div><button class="btn" onclick="openModal('organizationModal')">＋ Add Organization</button></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Organization</th><th>Country</th><th>Organization Type</th><th>Contact Email</th><th>Status</th></tr></thead><tbody id="organizationTable"></tbody></table></div></div>
+      </section>
+
+      <!-- USERS -->
+      <section class="page" id="users">
+        <div class="page-header"><div><h1>User Directory</h1><p>Manage platform users and access roles.</p></div><button class="btn" onclick="openModal('userModal')">＋ Add User</button></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Organization</th><th>Role</th><th>Status</th></tr></thead><tbody id="userTable"></tbody></table></div></div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="page" id="reports">
+        <div class="page-header"><div><h1>Reports & Analytics</h1><p>Procurement performance and platform activity overview.</p></div><button class="btn light" onclick="window.print()">Print Report</button></div>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-top">Total Tenders</div><h2 id="reportTenders">0</h2><p>All recorded tenders</p></div>
+          <div class="stat-card"><div class="stat-top">Total Suppliers</div><h2 id="reportSuppliers">0</h2><p>Supplier records</p></div>
+          <div class="stat-card"><div class="stat-top">Total Bids</div><h2 id="reportBids">0</h2><p>Bid submissions</p></div>
+          <div class="stat-card"><div class="stat-top">Total Contracts</div><h2 id="reportContracts">0</h2><p>Contract records</p></div>
+        </div>
+        <div class="panel"><div class="panel-header"><h3>Procurement Activity Summary</h3></div><div class="panel-body" id="reportSummary"></div></div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section class="page" id="notifications">
+        <div class="page-header"><div><h1>Notifications</h1><p>Platform alerts and procurement updates.</p></div><button class="btn light" onclick="clearNotifications()">Clear Notifications</button></div>
+        <div class="panel"><div class="panel-body" id="notificationList"><div class="empty">No notifications available.</div></div></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="settings">
+        <div class="page-header"><div><h1>Platform Settings</h1><p>Configure platform information and preferences.</p></div></div>
+        <div class="panel"><div class="panel-header"><h3>General Information</h3></div><div class="panel-body">
+          <div class="form-grid">
+            <div class="field"><label>Platform Name</label><input value="Global Procurement Portal"></div>
+            <div class="field"><label>Short Name</label><input value="GPP"></div>
+            <div class="field"><label>Support Email</label><input placeholder="support@example.com"></div>
+            <div class="field"><label>Default Currency</label><select><option>USD - US Dollar</option><option>EUR - Euro</option><option>GBP - British Pound</option><option>KES - Kenyan Shilling</option></select></div>
+          </div>
+          <button class="btn" onclick="notify('Settings saved successfully.')">Save Settings</button>
+        </div></div>
+        <div class="panel"><div class="panel-header"><h3>Data Management</h3></div><div class="panel-body">
+          <p class="muted" style="font-size:12px;margin-bottom:14px">Export or clear the records stored in this browser.</p>
+          <button class="btn light" onclick="exportData()">Export Data</button>
+          <button class="btn danger" onclick="resetData()">Clear All Records</button>
+        </div></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div class="modal-backdrop" id="supplierModal"><div class="modal">
+  <div class="modal-header"><h3>Register Supplier</h3><button class="close" onclick="closeModal('supplierModal')">×</button></div>
+  <form id="supplierForm"><div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Company Name *</label><input name="company" required></div>
+    <div class="field"><label>Registration Number *</label><input name="registration" required></div>
+    <div class="field"><label>Country *</label><input name="country" required></div>
+    <div class="field"><label>Email *</label><input name="email" type="email" required></div>
+    <div class="field"><label>Category</label><input name="category"></div>
+    <div class="field"><label>Status</label><select name="status"><option>Pending</option><option>Verified</option><option>Rejected</option></select></div>
+  </div></div><div class="modal-footer"><button type="button" class="btn light" onclick="closeModal('supplierModal')">Cancel</button><button class="btn">Save Supplier</button></div></form>
+</div></div>
+
+<!-- CONTRACT MODAL -->
+<div class="modal-backdrop" id="contractModal"><div class="modal">
+  <div class="modal-header"><h3>Add Contract</h3><button class="close" onclick="closeModal('contractModal')">×</button></div>
+  <form id="contractForm"><div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Contract Title *</label><input name="title" required></div>
+    <div class="field"><label>Supplier *</label><input name="supplier" required></div>
+    <div class="field"><label>Contract Value *</label><input name="value" required></div>
+    <div class="field"><label>Start Date</label><input name="start" type="date"></div>
+    <div class="field"><label>End Date</label><input name="end" type="date"></div>
+    <div class="field"><label>Status</label><select name="status"><option>Active</option><option>Pending</option><option>Completed</option></select></div>
+  </div></div><div class="modal-footer"><button type="button" class="btn light" onclick="closeModal('contractModal')">Cancel</button><button class="btn">Save Contract</button></div></form>
+</div></div>
+
+<!-- ORDER MODAL -->
+<div class="modal-backdrop" id="orderModal"><div class="modal">
+  <div class="modal-header"><h3>Create Purchase Order</h3><button class="close" onclick="closeModal('orderModal')">×</button></div>
+  <form id="orderForm"><div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Supplier *</label><input name="supplier" required></div>
+    <div class="field"><label>Description *</label><input name="description" required></div>
+    <div class="field"><label>Amount *</label><input name="amount" required></div>
+    <div class="field"><label>Order Date</label><input name="date" type="date"></div>
+    <div class="field"><label>Status</label><select name="status"><option>Pending</option><option>Approved</option><option>Delivered</option></select></div>
+  </div></div><div class="modal-footer"><button type="button" class="btn light" onclick="closeModal('orderModal')">Cancel</button><button class="btn">Save Order</button></div></form>
+</div></div>
+
+<!-- INVOICE MODAL -->
+<div class="modal-backdrop" id="invoiceModal"><div class="modal">
+  <div class="modal-header"><h3>Record Invoice</h3><button class="close" onclick="closeModal('invoiceModal')">×</button></div>
+  <form id="invoiceForm"><div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Supplier *</label><input name="supplier" required></div>
+    <div class="field"><label>Contract Reference</label><input name="contract"></div>
+    <div class="field"><label>Invoice Amount *</label><input name="amount" required></div>
+    <div class="field"><label>Due Date</label><input name="due" type="date"></div>
+    <div class="field"><label>Status</label><select name="status"><option>Pending</option><option>Paid</option><option>Overdue</option></select></div>
+  </div></div><div class="modal-footer"><button type="button" class="btn light" onclick="closeModal('invoiceModal')">Cancel</button><button class="btn">Save Invoice</button></div></form>
+</div></div>
+
+<!-- ORGANIZATION MODAL -->
+<div class="modal-backdrop" id="organizationModal"><div class="modal">
+  <div class="modal-header"><h3>Add Organization</h3><button class="close" onclick="closeModal('organizationModal')">×</button></div>
+  <form id="organizationForm"><div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Organization Name *</label><input name="name" required></div>
+    <div class="field"><label>Country *</label><input name="country" required></div>
+    <div class="field"><label>Organization Type</label><select name="type"><option>Government</option><option>Ministry</option><option>Agency</option><option>Public Institution</option></select></div>
+    <div class="field"><label>Contact Email</label><input name="email" type="email"></div>
+  </div></div><div class="modal-footer"><button type="button" class="btn light" onclick="closeModal('organizationModal')">Cancel</button><button class="btn">Save Organization</button></div></form>
+</div></div>
+
+<!-- USER MODAL -->
+<div class="modal-backdrop" id="userModal"><div class="modal">
+  <div class="modal-header"><h3>Add Platform User</h3><button class="close" onclick="closeModal('userModal')">×</button></div>
+  <form id="userForm"><div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Full Name *</label><input name="name" required></div>
+    <div class="field"><label>Email *</label><input name="email" type="email" required></div>
+    <div class="field"><label>Organization</label><input name="organization"></div>
+    <div class="field"><label>Role</label><select name="role"><option>Administrator</option><option>Procurement Officer</option><option>Evaluator</option><option>Supplier</option><option>Auditor</option></select></div>
+  </div></div><div class="modal-footer"><button type="button" class="btn light" onclick="closeModal('userModal')">Cancel</button><button class="btn">Save User</button></div></form>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = "gpp_portal_data_v1";
+
+  const initialData = {
+    tenders: [],
+    suppliers: [],
+    bids: [],
+    contracts: [],
+    orders: [],
+    invoices: [],
+    organizations: [],
+    users: [],
+    activities: [],
+    notifications: []
+  };
+
+  let data = loadData();
+
+  function loadData() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return saved ? { ...initialData, ...saved } : structuredClone(initialData);
+    } catch (error) {
+      return structuredClone(initialData);
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    refreshAll();
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    })[char]);
+  }
+
+  function reference(prefix) {
+    return prefix + "-" + Date.now().toString().slice(-8);
+  }
+
+  function dateToday() {
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function notify(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+
+  function addActivity(message) {
+    data.activities.unshift({ message, date: new Date().toLocaleString() });
+    data.activities = data.activities.slice(0, 30);
+    data.notifications.unshift({ message, date: new Date().toLocaleString() });
+    saveData();
+  }
+
+  function navigate(page) {
+    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".nav-link").forEach(el => el.classList.remove("active"));
+
+    const target = document.getElementById(page);
+    if (target) target.classList.add("active");
+
+    const nav = document.querySelector(`[data-page="${page}"]`);
+    if (nav) nav.classList.add("active");
+
+    const names = {
+      dashboard:"Dashboard", tenders:"Tender Marketplace", suppliers:"Supplier Directory",
+      bids:"Bid Management", create:"Create Tender", evaluation:"Bid Evaluations",
+      contracts:"Contract Management", orders:"Purchase Orders", invoices:"Invoice Management",
+      organizations:"Government Organizations", users:"User Directory",
+      reports:"Reports & Analytics", notifications:"Notifications", settings:"Platform Settings"
+    };
+    document.getElementById("topTitle").textContent = names[page] || "Global Procurement Portal";
+    document.getElementById("sidebar").classList.remove("open");
+    refreshAll();
+  }
+
+  document.querySelectorAll(".nav-link").forEach(link => {
+    link.addEventListener("click", () => navigate(link.dataset.page));
+  });
+
+  document.getElementById("menuToggle").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function openModal(id) { document.getElementById(id).classList.add("show"); }
+  function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+
+  function statusBadge(status) {
+    const value = String(status || "Pending").toLowerCase();
+    let cls = "pending";
+    if (["open","verified","active","approved","paid","accepted","completed","delivered"].includes(value)) cls = "open";
+    if (["closed"].includes(value)) cls = "closed";
+    if (["under review","submitted"].includes(value)) cls = "review";
+    if (["rejected","overdue"].includes(value)) cls = "rejected";
+    return `<span class="status ${cls}">${escapeHTML(status || "Pending")}</span>`;
+  }
+
+  function renderTenders() {
+    const search = (document.getElementById("tenderSearch")?.value || "").toLowerCase();
+    const status = document.getElementById("tenderStatus")?.value || "";
+    const rows = data.tenders.filter(t =>
+      `${t.ref} ${t.title} ${t.organization} ${t.country}`.toLowerCase().includes(search) &&
+      (!status || t.status === status)
+    );
+
+    document.getElementById("tenderTable").innerHTML = rows.length ? rows.map(t => `
+      <tr><td><strong>${escapeHTML(t.ref)}</strong></td>
+      <td>${escapeHTML(t.title)}</td><td>${escapeHTML(t.organization)}</td>
+      <td>${escapeHTML(t.country)}</td><td>${escapeHTML(t.budget)}</td>
+      <td>${escapeHTML(t.deadline)}</td><td>${statusBadge(t.status)}</td>
+      <td><button class="btn light small" onclick="viewTender('${t.id}')">View</button></td></tr>
+    `).join("") : `<tr><td colspan="8" class="empty">No tenders found.</td></tr>`;
+
+    document.getElementById("dashboardTenders").innerHTML = data.tenders.slice(0,5).map(t => `
+      <tr><td><strong>${escapeHTML(t.ref)}</strong></td><td>${escapeHTML(t.title)}</td>
+      <td>${escapeHTML(t.organization)}</td><td>${statusBadge(t.status)}</td></tr>
+    `).join("") || `<tr><td colspan="4" class="empty">No tender records available.</td></tr>`;
+  }
+
+  function renderSuppliers() {
+    const search = (document.getElementById("supplierSearch")?.value || "").toLowerCase();
+    const status = document.getElementById("supplierStatus")?.value || "";
+    const rows = data.suppliers.filter(s =>
+      `${s.company} ${s.country} ${s.registration}`.toLowerCase().includes(search) &&
+      (!status || s.status === status)
+    );
+    document.getElementById("supplierTable").innerHTML = rows.map(s => `
+      <tr><td><strong>${escapeHTML(s.company)}</strong></td><td>${escapeHTML(s.registration)}</td>
+      <td>${escapeHTML(s.country)}</td><td>${escapeHTML(s.email)}</td>
+      <td>${escapeHTML(s.category)}</td><td>${statusBadge(s.status)}</td>
+      <td><button class="btn light small" onclick="verifySupplier('${s.id}')">Verify</button></td></tr>
+    `).join("") || `<tr><td colspan="7" class="empty">No supplier records available.</td></tr>`;
+  }
+
+  function renderBids() {
+    const search = (document.getElementById("bidSearch")?.value || "").toLowerCase();
+    const status = document.getElementById("bidStatus")?.value || "";
+    const rows = data.bids.filter(b =>
+      `${b.ref} ${b.tender} ${b.supplier}`.toLowerCase().includes(search) &&
+      (!status || b.status === status)
+    );
+    document.getElementById("bidTable").innerHTML = rows.map(b => `
+      <tr><td><strong>${escapeHTML(b.ref)}</strong></td><td>${escapeHTML(b.tender)}</td>
+      <td>${escapeHTML(b.supplier)}</td><td>${escapeHTML(b.amount)}</td>
+      <td>${escapeHTML(b.date)}</td><td>${statusBadge(b.status)}</td>
+      <td><button class="btn light small" onclick="updateBid('${b.id}')">Update</button></td></tr>
+    `).join("") || `<tr><td colspan="7" class="empty">No bid submissions recorded.</td></tr>`;
+
+    document.getElementById("evaluationTable").innerHTML = rows.map(b => `
+      <tr><td>${escapeHTML(b.ref)}</td><td>${escapeHTML(b.tender)}</td>
+      <td>${escapeHTML(b.supplier)}</td><td>${escapeHTML(b.amount)}</td>
+      <td>${statusBadge(b.status)}</td><td><button class="btn light small" onclick="updateBid('${b.id}')">Evaluate</button></td></tr>
+    `).join("") || `<tr><td colspan="6" class="empty">No bids available for evaluation.</td></tr>`;
+  }
+
+  function renderContracts() {
+    document.getElementById("contractTable").innerHTML = data.contracts.map(c => `
+      <tr><td>${escapeHTML(c.ref)}</td><td><strong>${escapeHTML(c.title)}</strong></td>
+      <td>${escapeHTML(c.supplier)}</td><td>${escapeHTML(c.value)}</td>
+      <td>${escapeHTML(c.start)}</td><td>${escapeHTML(c.end)}</td><td>${statusBadge(c.status)}</td></tr>
+    `).join("") || `<tr><td colspan="7" class="empty">No contracts recorded.</td></tr>`;
+  }
+
+  function renderOrders() {
+    document.getElementById("orderTable").innerHTML = data.orders.map(o => `
+      <tr><td>${escapeHTML(o.ref)}</td><td>${escapeHTML(o.supplier)}</td>
+      <td>${escapeHTML(o.description)}</td><td>${escapeHTML(o.amount)}</td>
+      <td>${escapeHTML(o.date)}</td><td>${statusBadge(o.status)}</td></tr>
+    `).join("") || `<tr><td colspan="6" class="empty">No purchase orders recorded.</td></tr>`;
+  }
+
+  function renderInvoices() {
+    document.getElementById("invoiceTable").innerHTML = data.invoices.map(i => `
+      <tr><td>${escapeHTML(i.ref)}</td><td>${escapeHTML(i.supplier)}</td>
+      <td>${escapeHTML(i.contract)}</td><td>${escapeHTML(i.amount)}</td>
+      <td>${escapeHTML(i.due)}</td><td>${statusBadge(i.status)}</td></tr>
+    `).join("") || `<tr><td colspan="6" class="empty">No invoices recorded.</td></tr>`;
+  }
+
+  function renderOrganizations() {
+    document.getElementById("organizationTable").innerHTML = data.organizations.map(o => `
+      <tr><td><strong>${escapeHTML(o.name)}</strong></td><td>${escapeHTML(o.country)}</td>
+      <td>${escapeHTML(o.type)}</td><td>${escapeHTML(o.email)}</td><td>${statusBadge(o.status)}</td></tr>
+    `).join("") || `<tr><td colspan="5" class="empty">No organizations recorded.</td></tr>`;
+  }
+
+  function renderUsers() {
+    document.getElementById("userTable").innerHTML = data.users.map(u => `
+      <tr><td><strong>${escapeHTML(u.name)}</strong></td><td>${escapeHTML(u.email)}</td>
+      <td>${escapeHTML(u.organization)}</td><td>${escapeHTML(u.role)}</td><td>${statusBadge(u.status)}</td></tr>
+    `).join("") || `<tr><td colspan="5" class="empty">No users recorded.</td></tr>`;
+  }
+
+  function renderActivity() {
+    document.getElementById("activityFeed").innerHTML = data.activities.slice(0,7).map(a => `
+      <div class="activity"><div class="activity-icon">✓</div><div><strong>${escapeHTML(a.message)}</strong><small>${escapeHTML(a.date)}</small></div></div>
+    `).join("") || `<div class="empty">No activities recorded yet.</div>`;
+
+    document.getElementById("notificationList").innerHTML = data.notifications.map(n => `
+      <div class="activity"><div class="activity-icon">♧</div><div><strong>${escapeHTML(n.message)}</strong><small>${escapeHTML(n.date)}</small></div></div>
+    `).join("") || `<div class="empty">No notifications available.</div>`;
+  }
+
+  function refreshAll() {
+    document.getElementById("statTenders").textContent = data.tenders.filter(t => t.status === "Open").length;
+    document.getElementById("statSuppliers").textContent = data.suppliers.length;
+    document.getElementById("statBids").textContent = data.bids.length;
+    document.getElementById("statContracts").textContent = data.contracts.length;
+
+    document.getElementById("reportTenders").textContent = data.tenders.length;
+    document.getElementById("reportSuppliers").textContent = data.suppliers.length;
+    document.getElementById("reportBids").textContent = data.bids.length;
+    document.getElementById("reportContracts").textContent = data.contracts.length;
+
+    document.getElementById("reportSummary").innerHTML = `
+      <p style="font-size:13px;margin-bottom:10px">Tender records: <strong>${data.tenders.length}</strong></p>
+      <div class="progress"><span style="width:${Math.min(data.tenders.length * 5,100)}%"></span></div>
+      <p style="font-size:13px;margin:15px 0 10px">Supplier records: <strong>${data.suppliers.length}</strong></p>
+      <div class="progress"><span style="width:${Math.min(data.suppliers.length * 5,100)}%"></span></div>
+      <p style="font-size:13px;margin:15px 0 10px">Bid submissions: <strong>${data.bids.length}</strong></p>
+      <div class="progress"><span style="width:${Math.min(data.bids.length * 5,100)}%"></span></div>
+      <p style="font-size:13px;margin:15px 0 10px">Contracts: <strong>${data.contracts.length}</strong></p>
+      <div class="progress"><span style="width:${Math.min(data.contracts.length * 5,100)}%"></span></div>
+    `;
+
+    renderTenders();
+    renderSuppliers();
+    renderBids();
+    renderContracts();
+    renderOrders();
+    renderInvoices();
+    renderOrganizations();
+    renderUsers();
+    renderActivity();
+  }
+
+  document.getElementById("tenderForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    const tender = {
+      id: crypto.randomUUID(), ref: reference("GPP-TND"), ...f,
+      created: new Date().toISOString()
+    };
+    data.tenders.unshift(tender);
+    event.target.reset();
+    addActivity("New tender created: " + tender.title);
+    navigate("tenders");
+    notify("Tender created successfully.");
+  });
+
+  document.getElementById("supplierForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    data.suppliers.unshift({ id: crypto.randomUUID(), ...f });
+    event.target.reset();
+    closeModal("supplierModal");
+    addActivity("Supplier registered: " + f.company);
+    notify("Supplier saved successfully.");
+  });
+
+  document.getElementById("contractForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    data.contracts.unshift({ id: crypto.randomUUID(), ref: reference("GPP-CON"), ...f });
+    event.target.reset();
+    closeModal("contractModal");
+    addActivity("Contract recorded: " + f.title);
+    notify("Contract saved successfully.");
+  });
+
+  document.getElementById("orderForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    data.orders.unshift({ id: crypto.randomUUID(), ref: reference("GPP-PO"), ...f });
+    event.target.reset();
+    closeModal("orderModal");
+    addActivity("Purchase order created for " + f.supplier);
+    notify("Purchase order saved successfully.");
+  });
+
+  document.getElementById("invoiceForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    data.invoices.unshift({ id: crypto.randomUUID(), ref: reference("GPP-INV"), ...f });
+    event.target.reset();
+    closeModal("invoiceModal");
+    addActivity("Invoice recorded for " + f.supplier);
+    notify("Invoice saved successfully.");
+  });
+
+  document.getElementById("organizationForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    data.organizations.unshift({ id: crypto.randomUUID(), ...f, status: "Active" });
+    event.target.reset();
+    closeModal("organizationModal");
+    addActivity("Organization added: " + f.name);
+    notify("Organization saved successfully.");
+  });
+
+  document.getElementById("userForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const f = Object.fromEntries(new FormData(event.target));
+    data.users.unshift({ id: crypto.randomUUID(), ...f, status: "Active" });
+    event.target.reset();
+    closeModal("userModal");
+    addActivity("Platform user added: " + f.name);
+    notify("User saved successfully.");
+  });
+
+  function viewTender(id) {
+    const t = data.tenders.find(x => x.id === id);
+    if (!t) return;
+    alert(
+      "Tender: " + t.title +
+      "\nReference: " + t.ref +
+      "\nOrganization: " + t.organization +
+      "\nCountry: " + t.country +
+      "\nBudget: " + t.budget +
+      "\nDeadline: " + t.deadline +
+      "\nStatus: " + t.status +
+      "\n\nDescription:\n" + t.description +
+      "\n\nRequirements:\n" + (t.requirements || "Not specified")
+    );
+  }
+
+  function verifySupplier(id) {
+    const supplier = data.suppliers.find(s => s.id === id);
+    if (!supplier) return;
+    supplier.status = "Verified";
+    addActivity("Supplier verification status updated: " + supplier.company);
+    notify("Supplier marked as verified.");
+  }
+
+  function updateBid(id) {
+    const bid = data.bids.find(b => b.id === id);
+    if (!bid) return;
+    const choice = prompt("Enter new status: Submitted, Under Review, Accepted, Rejected", bid.status);
+    if (!choice) return;
+    const allowed = ["Submitted","Under Review","Accepted","Rejected"];
+    if (!allowed.includes(choice)) return notify("Invalid bid status.");
+    bid.status = choice;
+    addActivity("Bid " + bid.ref + " status changed to " + choice);
+    notify("Bid updated.");
+  }
+
+  function clearNotifications() {
+    if (!confirm("Clear all notifications?")) return;
+    data.notifications = [];
+    saveData();
+    notify("Notifications cleared.");
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gpp-data-export.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetData() {
+    if (!confirm("This will permanently clear all records stored in this browser. Continue?")) return;
+    data = structuredClone(initialData);
+    saveData();
+    notify("Browser records cleared.");
+  }
+
+  refreshAll();
+</script>
+</body>
+  </html>
